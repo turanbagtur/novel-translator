@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novel Translator - Otomatik Roman Çeviri Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/styles_additions.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h1>Novel Translator</h1>
+                <p class="version">v1.0.0</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item" data-view="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item active" data-view="projects">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Projeler</span>
+                </button>
+                <button class="nav-item" data-view="translate">
+                    <i class="fas fa-language"></i>
+                    <span>Çeviri</span>
+                </button>
+                <button class="nav-item" data-view="glossary">
+                    <i class="fas fa-book"></i>
+                    <span>Sözlük</span>
+                </button>
+                <button class="nav-item" data-view="export">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export</span>
+                </button>
+                <button class="nav-item" data-view="backup">
+                    <i class="fas fa-save"></i>
+                    <span>Yedekleme</span>
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Ayarlar</span>
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="stats-mini">
+                    <div class="stat-item">
+                        <i class="fas fa-project-diagram"></i>
+                        <span id="total-projects">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span id="total-chapters">0</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
+                        <p class="subtitle">Genel istatistikler ve maliyet takibi</p>
+                    </div>
+                    <button class="btn btn-secondary btn-icon" onclick="loadDashboard()">
+                        <i class="fas fa-sync"></i> Yenile
+                    </button>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h3 id="dash-total-projects">0</h3>
+                            <p>Toplam Proje</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h3 id="dash-total-chapters">0</h3>
+                            <p>Toplam Bölüm</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h3 id="dash-completed-chapters">0</h3>
+                            <p>Tamamlanan</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h3 id="dash-glossary-terms">0</h3>
+                            <p>Sözlük Terimi</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-row">
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-dollar-sign"></i> Maliyet Özeti</h3>
+                        <div class="cost-summary">
+                            <div class="cost-item">
+                                <span>Toplam Harcama:</span>
+                                <strong id="dash-total-cost">$0.00</strong>
+                            </div>
+                            <div class="cost-item">
+                                <span>Toplam Token:</span>
+                                <strong id="dash-total-tokens">0</strong>
+                            </div>
+                        </div>
+                        <div id="cost-by-provider" class="provider-costs">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-tasks"></i> İlerleme</h3>
+                        <div class="progress-info">
+                            <div class="progress-item">
+                                <span>Tamamlanma Oranı</span>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" id="completion-progress" style="width: 0%"></div>
+                                </div>
+                                <span class="progress-text" id="completion-text">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects View -->
+            <section id="projects-view" class="view active">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-folder-open"></i> Projelerim</h2>
+                        <p class="subtitle">Çeviri projelerinizi yönetin</p>
+                    </div>
+                    <button class="btn btn-primary btn-icon" onclick="showCreateProjectModal()">
+                        <i class="fas fa-plus"></i> Yeni Proje
+                    </button>
+                </div>
+                
+                <div id="projects-list" class="projects-grid">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Translation View -->
+            <section id="translate-view" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-language"></i> Bölüm Çevirisi</h2>
+                        <p class="subtitle">Bölümleri ekleyin ve çevirin</p>
+                    </div>
+                </div>
+                
+                <div class="translate-container">
+                    <div class="project-selector card">
+                        <label><i class="fas fa-folder"></i> Proje Seç:</label>
+                        <select id="project-select" onchange="loadProjectChapters()">
+                            <option value="">Proje seçiniz...</option>
+                        </select>
+                    </div>
+
+                    <div id="chapters-section" style="display: none;">
+                        <div class="chapters-header">
+                            <h3><i class="fas fa-file-alt"></i> Bölümler</h3>
+                            <button class="btn btn-secondary btn-icon" onclick="showAddChapterModal()">
+                                <i class="fas fa-plus"></i> Bölüm Ekle
+                            </button>
+                        </div>
+                        
+                        <div id="chapters-list" class="chapters-list">
+                            <!-- Chapters will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Glossary View -->
+            <section id="glossary-view" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-book"></i> Sözlük Yönetimi</h2>
+                        <p class="subtitle">Tutarlı çeviriler için terimleri yönetin</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-secondary btn-icon" onclick="showImportGlossaryModal()">
+                            <i class="fas fa-file-import"></i> İçe Aktar
+                        </button>
+                        <button class="btn btn-primary btn-icon" onclick="showAddGlossaryModal()">
+                            <i class="fas fa-plus"></i> Terim Ekle
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="glossary-selector card">
+                    <label><i class="fas fa-folder"></i> Proje:</label>
+                    <select id="glossary-project-select" onchange="loadGlossary()">
+                        <option value="">Proje seçiniz...</option>
+                    </select>
+                </div>
+
+                <div id="glossary-controls" style="display: none;">
+                    <!-- Glossary Tools -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="glossary-toolbar">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="glossary-search" placeholder="Terim ara..." onkeyup="searchGlossary()">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <select id="glossary-filter-type" onchange="loadGlossary()">
+                                    <option value="">Tüm Türler</option>
+                                    <option value="character">Karakter</option>
+                                    <option value="location">Yer</option>
+                                    <option value="skill">Yetenek</option>
+                                    <option value="item">Eşya</option>
+                                    <option value="general">Genel</option>
+                                </select>
+                                
+                                <label class="checkbox-label" style="margin: 0;">
+                                    <input type="checkbox" id="glossary-filter-confirmed" onchange="loadGlossary()">
+                                    <span>Sadece Onaylı</span>
+                                </label>
+                            </div>
+                            
+                            <div class="bulk-actions">
+                                <button class="btn btn-small btn-secondary btn-icon" onclick="toggleBulkMode()">
+                                    <i class="fas fa-check-square"></i> Toplu İşlem
+                                </button>
+                                <button class="btn btn-small btn-success btn-icon" onclick="showGlossaryStats()">
+                                    <i class="fas fa-chart-bar"></i> İstatistikler
+                                </button>
+                                <button class="btn btn-small btn-warning btn-icon" onclick="mergeDuplicates()">
+                                    <i class="fas fa-compress"></i> Duplikaları Birleştir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bulk Action Bar (hidden by default) -->
+                    <div id="bulk-action-bar" class="bulk-action-bar" style="display: none;">
+                        <span id="selected-count">0 seçili</span>
+                        <div class="bulk-buttons">
+                            <button class="btn btn-small btn-success" onclick="bulkConfirmSelected()">
+                                <i class="fas fa-check"></i> Onayla
+                            </button>
+                            <button class="btn btn-small btn-secondary" onclick="showBulkTypeModal()">
+                                <i class="fas fa-tag"></i> Tür Değiştir
+                            </button>
+                            <button class="btn btn-small btn-danger" onclick="bulkDeleteSelected()">
+                                <i class="fas fa-trash"></i> Sil
+                            </button>
+                            <button class="btn btn-small btn-secondary" onclick="cancelBulkMode()">
+                                <i class="fas fa-times"></i> İptal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="glossary-list" class="glossary-table">
+                    <!-- Glossary will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Export View -->
+            <section id="export-view" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-file-export"></i> Export</h2>
+                        <p class="subtitle">Çevirilerinizi farklı formatlarda dışa aktarın</p>
+                    </div>
+                </div>
+                
+                <div class="export-container">
+                    <div class="card">
+                        <h3><i class="fas fa-file-download"></i> Proje Export</h3>
+                        <p class="help-text">Tamamlanan bölümleri PDF, EPUB, DOCX veya TXT formatında dışa aktarın</p>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> Proje Seç:</label>
+                            <select id="export-project-select">
+                                <option value="">Proje seçiniz...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="export-formats">
+                            <button class="export-btn" onclick="exportProject('pdf')">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>PDF</span>
+                                <small>Profesyonel format</small>
+                            </button>
+                            <button class="export-btn" onclick="exportProject('epub')">
+                                <i class="fas fa-book-reader"></i>
+                                <span>EPUB</span>
+                                <small>E-kitap formatı</small>
+                            </button>
+                            <button class="export-btn" onclick="exportProject('docx')">
+                                <i class="fas fa-file-word"></i>
+                                <span>DOCX</span>
+                                <small>Word belgesi</small>
+                            </button>
+                            <button class="export-btn" onclick="exportProject('txt')">
+                                <i class="fas fa-file-alt"></i>
+                                <span>TXT</span>
+                                <small>Düz metin</small>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 2rem;">
+                        <h3><i class="fas fa-table"></i> Sözlük Export</h3>
+                        <p class="help-text">Sözlük terimlerinizi CSV veya Excel formatında dışa aktarın</p>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> Proje Seç:</label>
+                            <select id="glossary-export-project-select">
+                                <option value="">Proje seçiniz...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="export-formats">
+                            <button class="export-btn" onclick="exportGlossary('csv')">
+                                <i class="fas fa-file-csv"></i>
+                                <span>CSV</span>
+                                <small>Virgülle ayrılmış</small>
+                            </button>
+                            <button class="export-btn" onclick="exportGlossary('excel')">
+                                <i class="fas fa-file-excel"></i>
+                                <span>Excel</span>
+                                <small>XLSX formatı</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Backup View -->
+            <section id="backup-view" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-save"></i> Yedekleme</h2>
+                        <p class="subtitle">Projelerinizi yedekleyin ve geri yükleyin</p>
+                    </div>
+                    <button class="btn btn-secondary btn-icon" onclick="loadBackups()">
+                        <i class="fas fa-sync"></i> Yenile
+                    </button>
+                </div>
+                
+                <div class="backup-container">
+                    <div class="card">
+                        <h3><i class="fas fa-cloud-upload-alt"></i> Yeni Yedek Oluştur</h3>
+                        <p class="help-text">Projenizin tam yedeğini oluşturun (bölümler + sözlük)</p>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> Proje Seç:</label>
+                            <select id="backup-project-select">
+                                <option value="">Proje seçiniz...</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-icon" onclick="createBackup()">
+                            <i class="fas fa-save"></i> Yedek Oluştur
+                        </button>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 2rem;">
+                        <h3><i class="fas fa-cloud-download-alt"></i> Yedeği Geri Yükle</h3>
+                        <p class="help-text">Daha önce oluşturduğunuz yedeği geri yükleyin</p>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-file-upload"></i> Yedek Dosyası:</label>
+                            <input type="file" id="restore-backup-file" accept=".zip" class="file-input">
+                        </div>
+                        
+                        <button class="btn btn-secondary btn-icon" onclick="restoreBackup()">
+                            <i class="fas fa-upload"></i> Geri Yükle
+                        </button>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 2rem;">
+                        <h3><i class="fas fa-history"></i> Yedek Geçmişi</h3>
+                        <div id="backups-list">
+                            <!-- Backups will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings-view" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2><i class="fas fa-cog"></i> Ayarlar</h2>
+                        <p class="subtitle">AI sağlayıcılarınızı yapılandırın ve tema ayarlarını değiştirin</p>
+                    </div>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-section card">
+                        <h3><i class="fas fa-palette"></i> Tema Ayarları</h3>
+                        <p class="help-text">Arayüz temasını seçin</p>
+                        
+                        <div class="theme-selector">
+                            <button class="theme-option active" data-theme="dark" onclick="setTheme('dark')">
+                                <i class="fas fa-moon"></i>
+                                <span>Karanlık</span>
+                            </button>
+                            <button class="theme-option" data-theme="light" onclick="setTheme('light')">
+                                <i class="fas fa-sun"></i>
+                                <span>Aydınlık</span>
+                            </button>
+                            <button class="theme-option" data-theme="auto" onclick="setTheme('auto')">
+                                <i class="fas fa-adjust"></i>
+                                <span>Otomatik</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section card" style="margin-top: 2rem;">
+                        <h3><i class="fas fa-robot"></i> AI Sağlayıcı Yapılandırması</h3>
+                        <p class="help-text">Çeviri için kullanılacak yapay zeka servislerini yapılandırın</p>
+                        
+                        <div id="ai-providers-list" class="ai-providers">
+                            <!-- AI providers will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section card" style="margin-top: 2rem;">
+                        <h3><i class="fas fa-keyboard"></i> Klavye Kısayolları</h3>
+                        <p class="help-text">Hızlı erişim için klavye kısayolları</p>
+                        
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span>Yeni Proje</span>
+                                <kbd>Ctrl + N</kbd>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Çeviri Başlat</span>
+                                <kbd>Ctrl + T</kbd>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Kaydet</span>
+                                <kbd>Ctrl + S</kbd>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Ara</span>
+                                <kbd>Ctrl + F</kbd>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Dashboard</span>
+                                <kbd>Ctrl + D</kbd>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Create Project Modal -->
+    <div id="create-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-folder-plus"></i> Yeni Proje Oluştur</h3>
+                <button class="modal-close" onclick="closeModal('create-project-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="create-project-form" onsubmit="createProject(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> Proje Adı *</label>
+                    <input type="text" name="name" required placeholder="Örn: Solo Leveling">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Açıklama</label>
+                    <textarea name="description" rows="3" placeholder="Proje hakkında kısa açıklama..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-globe"></i> Kaynak Dil *</label>
+                        <select name="source_language" required>
+                            <option value="en">İngilizce</option>
+                            <option value="ja">Japonca</option>
+                            <option value="zh">Çince</option>
+                            <option value="ko">Korece</option>
+                            <option value="es">İspanyolca</option>
+                            <option value="fr">Fransızca</option>
+                            <option value="de">Almanca</option>
+                            <option value="ru">Rusça</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-flag"></i> Hedef Dil *</label>
+                        <select name="target_language" required>
+                            <option value="tr">Türkçe</option>
+                            <option value="en">İngilizce</option>
+                            <option value="es">İspanyolca</option>
+                            <option value="fr">Fransızca</option>
+                            <option value="de">Almanca</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-robot"></i> AI Sağlayıcı *</label>
+                        <select name="ai_provider" required>
+                            <optgroup label="🤖 AI Modelleri (Akıllı)">
+                                <option value="gemini">Google Gemini - Ücretsiz & Hızlı</option>
+                                <option value="openai">OpenAI (ChatGPT) - En Kaliteli</option>
+                                <option value="claude">Anthropic Claude - Doğal</option>
+                                <option value="groq">Groq - Çok Hızlı & Ücretsiz</option>
+                                <option value="deepseek">DeepSeek - Ekonomik</option>
+                                <option value="perplexity">Perplexity - Güncel</option>
+                            </optgroup>
+                            <optgroup label="🌐 Profesyonel Çeviri API'leri">
+                                <option value="deepl">DeepL - En İyi Kalite</option>
+                                <option value="google-translate">Google Cloud Translate</option>
+                                <option value="microsoft-translator">Microsoft Translator</option>
+                                <option value="yandex">Yandex Translate</option>
+                            </optgroup>
+                            <optgroup label="🆓 Ücretsiz/Açık Kaynak">
+                                <option value="libretranslate">LibreTranslate - Açık Kaynak</option>
+                                <option value="mymemory">MyMemory - Ücretsiz</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-microchip"></i> Model (Opsiyonel)</label>
+                        <input type="text" name="ai_model" placeholder="Varsayılan kullanılacak">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-project-modal')">İptal</button>
+                    <button type="submit" class="btn btn-primary btn-icon"><i class="fas fa-check"></i> Oluştur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Chapter Modal -->
+    <div id="add-chapter-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-plus"></i> Yeni Bölüm Ekle</h3>
+                <button class="modal-close" onclick="closeModal('add-chapter-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="add-chapter-form" onsubmit="addChapter(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag"></i> Bölüm Numarası *</label>
+                        <input type="number" name="chapter_number" required min="1" placeholder="1">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-heading"></i> Bölüm Başlığı</label>
+                        <input type="text" name="title" placeholder="Örn: Yeniden Uyanış">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-file-alt"></i> Orijinal Metin *</label>
+                    <textarea name="original_text" rows="15" required placeholder="Çevrilecek metni buraya yapıştırın..."></textarea>
+                    <small class="help-text"><i class="fas fa-info-circle"></i> Metni yapıştırdıktan sonra "Ekle ve Çevir" butonuna tıklayarak direkt çeviriye başlayabilirsiniz.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-chapter-modal')">İptal</button>
+                    <button type="submit" class="btn btn-secondary btn-icon" name="action" value="add"><i class="fas fa-save"></i> Sadece Ekle</button>
+                    <button type="submit" class="btn btn-primary btn-icon" name="action" value="translate"><i class="fas fa-language"></i> Ekle ve Çevir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chapter Detail Modal -->
+    <div id="chapter-detail-modal" class="modal">
+        <div class="modal-content modal-xlarge">
+            <div class="modal-header">
+                <h3 id="chapter-modal-title"><i class="fas fa-file-alt"></i> Bölüm Detayı</h3>
+                <button class="modal-close" onclick="closeModal('chapter-detail-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="chapter-detail-content">
+                <!-- Chapter details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Glossary Modal -->
+    <div id="add-glossary-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Sözlük Terimi Ekle</h3>
+                <button class="modal-close" onclick="closeModal('add-glossary-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="add-glossary-form" onsubmit="addGlossaryEntry(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-font"></i> Orijinal Terim *</label>
+                    <input type="text" name="original_term" required placeholder="Örn: Shadow Monarch">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-language"></i> Çeviri *</label>
+                    <input type="text" name="translated_term" required placeholder="Örn: Gölge Hükümdarı">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Terim Türü</label>
+                    <select name="term_type">
+                        <option value="general">Genel</option>
+                        <option value="character">Karakter Adı</option>
+                        <option value="location">Yer Adı</option>
+                        <option value="skill">Yetenek/Büyü</option>
+                        <option value="item">Eşya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-comment"></i> Bağlam/Not</label>
+                    <textarea name="context" rows="3" placeholder="Bu terimin kullanıldığı bağlam veya notlar..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-glossary-modal')">İptal</button>
+                    <button type="submit" class="btn btn-primary btn-icon"><i class="fas fa-check"></i> Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Provider Config Modal -->
+    <div id="ai-config-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="ai-config-modal-title"><i class="fas fa-robot"></i> AI Sağlayıcı Yapılandır</h3>
+                <button class="modal-close" onclick="closeModal('ai-config-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="ai-config-form" onsubmit="saveAIConfig(event)">
+                <input type="hidden" name="provider_name" id="config-provider-name">
+                
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> API Anahtarı *</label>
+                    <input type="password" name="api_key" id="config-api-key" required placeholder="API anahtarınızı buraya girin">
+                    <small class="help-text"><i class="fas fa-shield-alt"></i> API anahtarınız güvenli bir şekilde saklanacaktır.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-microchip"></i> Model Adı</label>
+                    <input type="text" name="model" id="config-model" placeholder="Varsayılan model kullanılacak">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-coins"></i> Maksimum Token</label>
+                        <input type="number" name="max_tokens" id="config-max-tokens" value="4000" min="100" max="32000">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-temperature-high"></i> Temperature</label>
+                        <input type="number" name="temperature" id="config-temperature" value="0.7" min="0" max="2" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="enabled" id="config-enabled" checked>
+                        <span><i class="fas fa-power-off"></i> Bu sağlayıcıyı etkinleştir</span>
+                    </label>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('ai-config-modal')">İptal</button>
+                    <button type="submit" class="btn btn-primary btn-icon"><i class="fas fa-save"></i> Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Glossary Stats Modal -->
+    <div id="glossary-stats-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Sözlük İstatistikleri</h3>
+                <button class="modal-close" onclick="closeModal('glossary-stats-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="glossary-stats-content" style="padding: 2rem;">
+                <!-- Stats will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Type Change Modal -->
+    <div id="bulk-type-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-tag"></i> Tür Değiştir</h3>
+                <button class="modal-close" onclick="closeModal('bulk-type-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding: 2rem;">
+                <div class="form-group">
+                    <label>Yeni Tür Seç:</label>
+                    <select id="bulk-new-type">
+                        <option value="general">Genel</option>
+                        <option value="character">Karakter</option>
+                        <option value="location">Yer</option>
+                        <option value="skill">Yetenek</option>
+                        <option value="item">Eşya</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('bulk-type-modal')">İptal</button>
+                    <button type="button" class="btn btn-primary btn-icon" onclick="applyBulkTypeChange()">
+                        <i class="fas fa-check"></i> Uygula
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Glossary Modal -->
+    <div id="import-glossary-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-import"></i> Sözlük İçe Aktar</h3>
+                <button class="modal-close" onclick="closeModal('import-glossary-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding: 2rem;">
+                <div class="form-group">
+                    <label><i class="fas fa-file-csv"></i> CSV veya Excel Dosyası</label>
+                    <input type="file" id="import-glossary-file" accept=".csv,.xlsx,.xls" class="file-input">
+                    <small class="help-text">
+                        <i class="fas fa-info-circle"></i> 
+                        Dosya şu kolonları içermelidir: original_term, translated_term, term_type (opsiyonel), context (opsiyonel)
+                    </small>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('import-glossary-modal')">İptal</button>
+                    <button type="button" class="btn btn-primary btn-icon" onclick="importGlossary()">
+                        <i class="fas fa-upload"></i> İçe Aktar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Yükleniyor...</p>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
